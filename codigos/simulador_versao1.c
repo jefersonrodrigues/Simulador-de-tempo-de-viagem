@@ -19,8 +19,8 @@
 #define BUFFER_SIZE 256 //size of informations buffer
 
 int newsockfd;
-int comm_id[1], bl = 0, send_data = 0, find = 0, _save = 0, function_id=0;
-double destination[1], vehicle[1], car_speed = 0, bus_speed = 0, sub_speed = 0, car_delay=0, bus_delay=0, sub_delay=0, best_op=0, car_time=0, bus_time=10, sub_time=20, small_size=0;
+int comm_id[50], bl = 0, send_data = 0, find = 0, _save = 0, function_id=0;
+double vehicle[50], car_speed = 0, bus_speed = 0, sub_speed = 0, car_delay=0, bus_delay=0, sub_delay=0, best_op=0, car_time=0, bus_time=10, sub_time=20, small_size=0;
 char data[BUFFER_SIZE][5];
 int empty = 0;
 
@@ -112,10 +112,7 @@ void *receiver(void *arg) {            									//receive data and indentifies t
     	aux = strtok(NULL, " ");
       if (ctrl == 0){         													//control to save the first data
       	vehicle[function_id] = atof(aux);
-        ctrl = 1;
-      /*}else if (ctrl == 1){   												//control to save the second data
-        destination[function_id] = atof(aux);
-        ctrl = 2;  */           												// don't save anymore
+        ctrl = 1;           												// don't save anymore
       }
     }
     if(function_id == BUFFER_SIZE)       								//Começa a sobreescrever
@@ -143,7 +140,7 @@ void save_b(char *arg){
 }
 
 // FIND AVERAGE VELOCITY (THEORICAL)
-void*  average_speed(void *arg){
+void *average_speed(void *arg){
 	char speed_c[50];
   struct periodic_info info;
 	make_periodic(TIME_SPEED, &info);
@@ -155,12 +152,12 @@ void*  average_speed(void *arg){
 				data[bl][0] = '0';     					//conversão para char para poder colocar no buffer
         save_b(speed_c);
       }else if(comm_id[bl] == 0 && vehicle[bl] == 2){   	//VEHICLE = BUS AND COMMAND = 0
-				bus_speed = 20.8;
+				bus_speed = 21.8;
 				sprintf(speed_c, "%f", bus_speed);
 				data[bl][0] = '0';					//Conversão para char para poder colocar no buffer
 				save_b(speed_c);
 			}else if(comm_id[bl] == 0 && vehicle[bl] == 3){    	//VEHICLE = METRO AND COMMAND = 0
-				sub_speed = 30;
+				sub_speed = 26.1;
 				sprintf(speed_c, "%f", sub_speed);
 				data[bl][0] = '0';
 				save_b(speed_c);
@@ -182,7 +179,7 @@ void* delay(void *arg){
 		while(1){
 				pthread_mutex_lock(&protect);
 						if(comm_id[bl] == 1 && vehicle[bl] == 0){   /* Só efetua o calculo se não forem zero */
-							if(myTime->tm_hour != 16){
+							if(myTime->tm_hour != 18 && myTime->tm_hour != 19){
 									car_aux = car_speed;
 									car_delay = 41.7/car_aux;
 									sprintf(delay_c, "%f", car_delay);
@@ -190,7 +187,7 @@ void* delay(void *arg){
 									save_b(delay_c);
 
 							}else{
-										car_aux = car_speed - car_speed * 0.42;
+										car_aux = car_speed - car_speed * 0.1;
 										car_delay = 41.7/car_aux;
 										sprintf(delay_c, "%f", car_delay);
 										data[bl][0] = '1';
@@ -198,7 +195,7 @@ void* delay(void *arg){
 
 							}
 						}else if(comm_id[bl] == 1 && vehicle[bl] == 1){
-							if(myTime->tm_hour != 18){
+							if(myTime->tm_hour != 18 && myTime->tm_hour != 19){
 									if(myTime->tm_min > 0 && myTime->tm_min <= 15){
 										bus_aux = 15 - myTime->tm_min;
 									}else if(myTime->tm_min > 15 && myTime->tm_min <= 30){
@@ -232,7 +229,7 @@ void* delay(void *arg){
 										save_b(delay_c);
 							}
 						}else if(comm_id[bl] == 1 && vehicle[bl] == 2){
-							if(myTime->tm_hour != 18){
+							if(myTime->tm_hour != 18 || myTime->tm_hour != 19){
 									if(myTime->tm_min > 0 && myTime->tm_min <= 30){
 										sub_aux = 30 - myTime->tm_min;
 									}else if(myTime->tm_min > 30 && myTime->tm_min <= 59){
@@ -253,7 +250,8 @@ void* delay(void *arg){
 										}else{
 											sub_aux = 0;
 										}
-										sub_delay = 41.7/sub_speed + sub_aux/60 + 15/60;
+										sub_delay = 41.7/sub_speed + sub_aux/60 + 30/60;
+										printf("subdelay: %f", sub_delay);
 										sprintf(delay_c, "%f", sub_delay);
 										data[bl][0] = '1';
 										save_b(delay_c);
@@ -336,7 +334,7 @@ void* send_results(void *arg){
                     printf("Error escrevendo no socket!\n");
                     exit(1);
                 }
-                printf("[+] \tMensagem enviada\n");
+                printf("[>>] \tMensagem enviada\n");
             pthread_mutex_unlock(&mutex);
             }
         pthread_mutex_unlock(&protect);
@@ -404,7 +402,7 @@ int main(int argc, char *argv[]) {
       	pthread_create(&calc_delay, NULL, delay, NULL);
         pthread_create(&best_time, NULL, best_opt, NULL);
         pthread_create(&send_d, NULL, send_results, NULL);
-        printf("[+]\tConexao estabelecida. Esperando comandos...\n\n");
+        printf("[>>]\tConexao estabelecida. Esperando comandos...\n\n");
 				pthread_mutex_unlock(&mutex);
     }
     return 0;
