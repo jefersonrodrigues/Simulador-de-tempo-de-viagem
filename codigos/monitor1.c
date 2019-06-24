@@ -14,7 +14,7 @@
 
 int sockfd;
 
-    //Função para leitura do socket: Lê informação e salva em buffer
+    //Função para leitura do socket, lê informação e salva em buffer
 
 void *leitura(void *arg) {
     char buffer[256];
@@ -39,21 +39,26 @@ void *leitura(void *arg) {
         if (buffer[0] == '0'){
             id_command = strtok(buffer, " ");
             velocidade_media = strtok(NULL, " ");
-            printf("\n\n[+] A velocidade média teórica do trajeto é de %.4s km/h\n",velocidade_media );
+            printf("\n[+] A velocidade média teórica do trajeto é de %.4s km/h\n",velocidade_media );
         }else if (buffer[0] == '1'){
             velocity = strtok(buffer, " ");
             id_command = strtok(NULL, " ");
             command = atof(id_command);
             command_i = atoi(id_command);
-            printf("\n\n[+] O tempo de duração da viagem para esse tipo de transporte será de %.2d horas e %.0f minutos\n", command_i, (command-command_i)*60);
+            printf("\n[+] O tempo de duração da viagem para esse tipo de transporte será de %.2d horas e %.0f minutos\n", command_i, (command-command_i)*60);
         }else if(buffer[0] == '2'){
             id_command = strtok(buffer, " ");
             best_opt = strtok(NULL, " ");
             op = atoi(best_opt);
-            printf("o tempo de %c é: %s",buffer[1], op);
-
-          }
-      }
+            if(op == 1){
+                printf("\nA opção mais rápida é ir de carro e o tempo de viagem será de %.2d horas e %.0f minutos\n", command_i, (command-command_i)*60);
+            }else if(op == 2){
+              printf("\nA opção mais rápida é ir de ônibus e o tempo de viagem será de %.2d horas e %.0f minutos\n", command_i, (command-command_i)*60);
+            }else if(op == 3){
+              printf("\nA opção mais rápida é ir de metrô e o tempo de viagem será de %.2d horas e %.0f minutos\n", command_i, (command-command_i)*60);
+            }
+        }
+    }
   }
 
 
@@ -93,9 +98,13 @@ int main(int argc, char *argv[]) {
     }
 
     pthread_create(&t, NULL, leitura, NULL);
-    printf("\n|------------------------ SÃO PAULO/SP | ESTAÇÃO GRAJAÚ --------------------|"); //capturar comandos aqui
-    printf("\n                             %i/%i/%i - %ih%imin                            ",myTime->tm_mday, myTime->tm_mon +1, 1900+myTime->tm_year, myTime->tm_hour, myTime->tm_min);
-    printf("\n\n[+]\t Informe os comandos:\n");
+    printf("\n|---------------------------- [SÃO PAULO/SP | ESTAÇÃO GRAJAÚ] -------------------------|"); //capturar comandos aqui
+    printf("\n                           [ %i/%i/%i - %ih%imin ]                          ",myTime->tm_mday, myTime->tm_mon +1, 1900+myTime->tm_year, myTime->tm_hour, myTime->tm_min);
+    printf("\n\n[+] Comandos\n \t0 - Calcula velocidade média do trajeto de acordo com o meio de transporte selecionado \n \t1 - Calcula o tempo de deslocamento de acordo com o meio de transporte indicado\n \t2 - Calcula a melhor opção disponível, baseado no menor tempo de viagem\n \texit - Para encerra o programa");
+    printf("\n\n[+] Meios de transporte\n \t1 - Carro\n \t2 - Ônibus\n \t3 - Metrô");
+    printf("\n\n[+] insira os comando seguindo o modelo: [comando][tecla espaço][meio de transporte]");
+    printf("\n\n|-------------------------------------------------------------------------------------|");
+    printf("\n\n[?] Informe os comandos:\n");
 
 
     do {
